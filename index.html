@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Статистика MAX - Сводный отчет</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: #eef2f7;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 12px;
+        }
+        .container {
+            max-width: 1100px;
+            width: 100%;
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 15px 35px rgba(0,20,50,0.15);
+            padding: 22px 20px 30px 20px;
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #13294b;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding-left: 8px;
+        }
+        h1 span {
+            background: #2e5bff;
+            color: white;
+            font-size: 13px;
+            padding: 5px 14px;
+            border-radius: 40px;
+        }
+        /* Верхняя панель с выбором филиала и датой */
+        .top-panel {
+            background: #f8fafd;
+            border-radius: 22px;
+            padding: 18px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 20px 30px;
+            border: 1px solid #dde3ec;
+        }
+        .branch-selector {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex: 2 1 300px;
+        }
+        .branch-selector label {
+            font-weight: 600;
+            color: #1b2b4b;
+            font-size: 16px;
+            white-space: nowrap;
+        }
+        .branch-selector select {
+            flex: 1;
+            padding: 14px 18px;
+            border: 1px solid #cbd5e1;
+            border-radius: 60px;
+            background: white;
+            font-size: 15px;
+            font-weight: 500;
+            color: #0e1c3a;
+            cursor: pointer;
+            outline: none;
+            transition: 0.2s;
+            min-width: 220px;
+        }
+        .branch-selector select:hover, .branch-selector select:focus {
+            border-color: #2e5bff;
+            box-shadow: 0 0 0 3px rgba(46,91,255,0.15);
+        }
+        .date-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: white;
+            padding: 5px 15px 5px 20px;
+            border-radius: 40px;
+            border: 1px solid #dae2ed;
+        }
+        .date-box label {
+            font-weight: 600;
+            color: #263c6f;
+            font-size: 15px;
+        }
+        .date-box input[type="date"] {
+            border: none;
+            padding: 10px 0;
+            font-size: 15px;
+            background: transparent;
+            color: #141e3b;
+            font-family: inherit;
+        }
+        /* Таблица */
+        .table-section {
+            background: #ffffff;
+            border-radius: 24px;
+            border: 1px solid #e2eaf2;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.02);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed; /* фиксированная ширина для вместимости */
+        }
+        th {
+            background: #f2f6fc;
+            color: #1a2c4b;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 18px 12px;
+            text-align: left;
+            border-bottom: 2px solid #dbe1ec;
+            word-break: break-word;
+        }
+        td {
+            padding: 15px 12px;
+            border-bottom: 1px solid #edf2f8;
+            vertical-align: middle;
+        }
+        /* ширина колонок (первая уже, остальные примерно равны) */
+        th:nth-child(1) { width: 16%; }
+        th:nth-child(2) { width: 21%; }
+        th:nth-child(3) { width: 21%; }
+        th:nth-child(4) { width: 22%; }
+        th:nth-child(5) { width: 20%; }
+
+        /* Поля ввода цифр */
+        .stat-input {
+            width: 100%;
+            padding: 12px 12px;
+            border: 1px solid #d4dfed;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 500;
+            background: #ffffff;
+            text-align: right;
+            color: #0c1b38;
+            transition: 0.15s;
+        }
+        .stat-input:focus {
+            border-color: #2e5bff;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(46,91,255,0.15);
+        }
+        .stat-input::placeholder {
+            color: #9bafc9;
+            font-weight: 400;
+            font-size: 13px;
+        }
+        /* Строка итогов */
+        .total-row {
+            background: #eef3fd;
+        }
+        .total-row td {
+            background: #eef3fd;
+            font-weight: 650;
+            color: #10213e;
+            border-top: 2px solid #c7d4ee;
+            border-bottom: none;
+            padding: 16px 12px;
+        }
+        .total-label {
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+        }
+        /* Кнопка сохранения */
+        .save-area {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 15px;
+        }
+        .save-btn {
+            background: #1e3f8f;
+            border: none;
+            color: white;
+            font-weight: 600;
+            font-size: 17px;
+            padding: 16px 40px;
+            border-radius: 50px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 10px 20px rgba(30,63,143,0.25);
+            transition: 0.2s;
+            border: 1px solid #153277;
+        }
+        .save-btn:hover {
+            background: #143177;
+            transform: translateY(-2px);
+            box-shadow: 0 16px 28px rgba(20,50,120,0.3);
+        }
+        .filename-hint {
+            color: #52709b;
+            font-size: 14px;
+            margin-top: 12px;
+            text-align: right;
+            padding-right: 10px;
+        }
+        .mobile-note {
+            display: none;
+            font-size: 13px;
+            color: #727f94;
+            margin-top: 8px;
+        }
+        /* Адаптация */
+        @media (max-width: 700px) {
+            .container { padding: 15px; }
+            th { font-size: 12.5px; padding: 12px 6px; }
+            td { padding: 12px 6px; }
+            .stat-input { padding: 8px 6px; font-size: 14px; }
+            .branch-selector { flex-wrap: wrap; }
+            .mobile-note { display: block; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>
+        📋 Сбор статистики по цифровым документам MAX
+        <span>один филиал за раз</span>
+    </h1>
+
+    <!-- Единый выбор филиала и дата -->
+    <div class="top-panel">
+        <div class="branch-selector">
+            <label for="branchSelect">🏢 Филиал:</label>
+            <select id="branchSelect">
+                <!-- заполняется из JS -->
+            </select>
+        </div>
+        <div class="date-box">
+            <label for="reportDate">📅 Дата:</label>
+            <input type="date" id="reportDate">
+        </div>
+    </div>
+
+    <!-- Таблица для одного филиала (все показатели) -->
+    <div class="table-section">
+        <table id="statsTable">
+            <thead>
+            <tr>
+                <th>Филиал</th>
+                <th>Работа по формированию цифровых документов в MAX</th>
+                <th>Загрузили цифровые документы в MAX</th>
+                <th>Создали цифровой ID и загрузили документы</th>
+                <th>Считывания QR-кодов Госканом</th>
+            </tr>
+            </thead>
+            <tbody id="tableBody">
+            <!-- здесь будет только одна строка (текущий филиал) -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Кнопка сохранения (сохраняет данные по ВСЕМ филиалам) -->
+    <div class="save-area">
+        <button class="save-btn" id="saveAllBtn">
+            💾 Сохранить общую статистику (все филиалы)
+        </button>
+    </div>
+    <div class="filename-hint">
+        Файл: statistics_max_all_branches.json — содержит данные по всем филиалам
+    </div>
+    <div class="mobile-note">
+        * поля принимают только цифры
+    </div>
+</div>
+
+<script>
+(function() {
+    // ---------- СПИСОК ФИЛИАЛОВ ----------
+    const branches = [
+        "Головной офис",
+        "Филиал Алмалинский",
+        "Филиал Ауэзовский",
+        "Филиал Бостандыкский",
+        "Филиал Медеуский",
+        "Филиал Наурызбайский",
+        "Филиал Турксибский",
+        "Филиал Жетысуский",
+        "Региональный центр Астана",
+        "Региональный центр Шымкент",
+        "Северный филиал",
+        "Западный филиал"
+    ];
+
+    // ---------- ДАННЫЕ ДЛЯ ВСЕХ ФИЛИАЛОВ (объект: branchName -> показатели) ----------
+    // инициализируем пустыми строками
+    let allData = {};
+    branches.forEach(b => {
+        allData[b] = {
+            workFormation: '',      // работа по формированию
+            uploadedDocs: '',       // загрузили документы
+            createdIdAndUploaded: '', // создали ID и загрузили
+            qrScans: ''             // считывания QR
+        };
+    });
+
+    // текущий выбранный филиал
+    let currentBranch = branches[0];
+
+    // ---------- DOM элементы ----------
+    const branchSelect = document.getElementById('branchSelect');
+    const dateInput = document.getElementById('reportDate');
+    const tableBody = document.getElementById('tableBody');
+    const saveBtn = document.getElementById('saveAllBtn');
+
+    // ---------- Установка сегодняшней даты ----------
+    const today = new Date();
+    const y = today.getFullYear();
+    const m = String(today.getMonth() + 1).padStart(2, '0');
+    const d = String(today.getDate()).padStart(2, '0');
+    dateInput.value = `${y}-${m}-${d}`;
+
+    // ---------- Заполнить select филиалами ----------
+    function populateBranchSelect() {
+        let options = '';
+        branches.forEach(b => {
+            options += `<option value="${b}">${b}</option>`;
+        });
+        branchSelect.innerHTML = options;
+        branchSelect.value = currentBranch;
+    }
+    populateBranchSelect();
+
+    // ---------- Функция для ограничения ввода только цифр ----------
+    function enforceNumeric(e) {
+        const input = e.target;
+        let val = input.value;
+        val = val.replace(/[^\d]/g, '');
+        if (val.length > 9) val = val.slice(0, 9);
+        input.value = val;
+    }
+
+    // ---------- Отрисовка таблицы (одна строка для текущего филиала) ----------
+    function renderTable() {
+        const data = allData[currentBranch] || { workFormation: '', uploadedDocs: '', createdIdAndUploaded: '', qrScans: '' };
+        // формируем строку таблицы
+        let html = '<tr>';
+        // филиал (название, не редактируется)
+        html += `<td style="font-weight: 600; color: #092044;">${currentBranch}</td>`;
+        // 4 поля ввода с привязкой к currentBranch
+        html += `<td><input type="text" class="stat-input" data-field="workFormation" value="${data.workFormation}" placeholder="только цифры" inputmode="numeric"></td>`;
+        html += `<td><input type="text" class="stat-input" data-field="uploadedDocs" value="${data.uploadedDocs}" placeholder="только цифры" inputmode="numeric"></td>`;
+        html += `<td><input type="text" class="stat-input" data-field="createdIdAndUploaded" value="${data.createdIdAndUploaded}" placeholder="только цифры" inputmode="numeric"></td>`;
+        html += `<td><input type="text" class="stat-input" data-field="qrScans" value="${data.qrScans}" placeholder="только цифры" inputmode="numeric"></td>`;
+        html += '</tr>';
+
+        // Добавляем строку итогов (сумма по всем филиалам)
+        const totalWork = Object.values(allData).reduce((acc, cur) => acc + (parseInt(cur.workFormation, 10) || 0), 0);
+        const totalUploaded = Object.values(allData).reduce((acc, cur) => acc + (parseInt(cur.uploadedDocs, 10) || 0), 0);
+        const totalId = Object.values(allData).reduce((acc, cur) => acc + (parseInt(cur.createdIdAndUploaded, 10) || 0), 0);
+        const totalQr = Object.values(allData).reduce((acc, cur) => acc + (parseInt(cur.qrScans, 10) || 0), 0);
+
+        // форматирование с пробелами
+        const fmt = (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+
+        html += '<tr class="total-row">';
+        html += `<td class="total-label">📊 ИТОГО (все филиалы)</td>`;
+        html += `<td>${fmt(totalWork)}</td>`;
+        html += `<td>${fmt(totalUploaded)}</td>`;
+        html += `<td>${fmt(totalId)}</td>`;
+        html += `<td>${fmt(totalQr)}</td>`;
+        html += '</tr>';
+
+        tableBody.innerHTML = html;
+
+        // навесить обработчики на новые инпуты
+        document.querySelectorAll('.stat-input').forEach(inp => {
+            inp.addEventListener('input', enforceNumeric);
+            inp.addEventListener('blur', updateDataFromInputs);
+        });
+    }
+
+    // ---------- Обновить allData из полей ввода (текущий филиал) ----------
+    function updateDataFromInputs() {
+        const inputs = document.querySelectorAll('.stat-input');
+        let work = '', up = '', idUp = '', qr = '';
+        inputs.forEach(inp => {
+            const field = inp.getAttribute('data-field');
+            const val = inp.value;
+            if (field === 'workFormation') work = val;
+            else if (field === 'uploadedDocs') up = val;
+            else if (field === 'createdIdAndUploaded') idUp = val;
+            else if (field === 'qrScans') qr = val;
+        });
+        if (allData[currentBranch]) {
+            allData[currentBranch].workFormation = work;
+            allData[currentBranch].uploadedDocs = up;
+            allData[currentBranch].createdIdAndUploaded = idUp;
+            allData[currentBranch].qrScans = qr;
+        }
+        // перерисовать, чтобы обновить итоги (без потери данных, т.к. allData обновлена)
+        renderTable();
+    }
+
+    // ---------- Смена филиала ----------
+    branchSelect.addEventListener('change', function(e) {
+        // перед сменой сохраним данные текущего филиала из полей ввода
+        const inputs = document.querySelectorAll('.stat-input');
+        let work = '', up = '', idUp = '', qr = '';
+        inputs.forEach(inp => {
+            const field = inp.getAttribute('data-field');
+            const val = inp.value;
+            if (field === 'workFormation') work = val;
+            else if (field === 'uploadedDocs') up = val;
+            else if (field === 'createdIdAndUploaded') idUp = val;
+            else if (field === 'qrScans') qr = val;
+        });
+        if (allData[currentBranch]) {
+            allData[currentBranch].workFormation = work;
+            allData[currentBranch].uploadedDocs = up;
+            allData[currentBranch].createdIdAndUploaded = idUp;
+            allData[currentBranch].qrScans = qr;
+        }
+
+        // меняем текущий филиал
+        currentBranch = e.target.value;
+        // перерисовываем таблицу с данными нового филиала (из allData)
+        renderTable();
+    });
+
+    // ---------- Сохранение всех данных в один JSON-файл ----------
+    function saveAllToFile() {
+        // сначала принудительно сохраняем текущее отображение в allData
+        const inputs = document.querySelectorAll('.stat-input');
+        let work = '', up = '', idUp = '', qr = '';
+        inputs.forEach(inp => {
+            const field = inp.getAttribute('data-field');
+            const val = inp.value;
+            if (field === 'workFormation') work = val;
+            else if (field === 'uploadedDocs') up = val;
+            else if (field === 'createdIdAndUploaded') idUp = val;
+            else if (field === 'qrScans') qr = val;
+        });
+        if (allData[currentBranch]) {
+            allData[currentBranch].workFormation = work;
+            allData[currentBranch].uploadedDocs = up;
+            allData[currentBranch].createdIdAndUploaded = idUp;
+            allData[currentBranch].qrScans = qr;
+        }
+
+        // формируем полный объект с датой и данными всех филиалов
+        const selectedDate = dateInput.value;
+        const output = {
+            date: selectedDate,
+            branches: {}
+        };
+
+        // преобразуем each branch, значения приводим к числам (если пусто -> 0)
+        branches.forEach(b => {
+            const rec = allData[b] || { workFormation: '', uploadedDocs: '', createdIdAndUploaded: '', qrScans: '' };
+            output.branches[b] = {
+                workFormation: rec.workFormation === '' ? 0 : parseInt(rec.workFormation, 10),
+                uploadedDocs: rec.uploadedDocs === '' ? 0 : parseInt(rec.uploadedDocs, 10),
+                createdIdAndUploaded: rec.createdIdAndUploaded === '' ? 0 : parseInt(rec.createdIdAndUploaded, 10),
+                qrScans: rec.qrScans === '' ? 0 : parseInt(rec.qrScans, 10)
+            };
+        });
+
+        // добавим итоговые суммы для удобства
+        const totalWork = Object.values(output.branches).reduce((acc, b) => acc + (b.workFormation || 0), 0);
+        const totalUp = Object.values(output.branches).reduce((acc, b) => acc + (b.uploadedDocs || 0), 0);
+        const totalId = Object.values(output.branches).reduce((acc, b) => acc + (b.createdIdAndUploaded || 0), 0);
+        const totalQr = Object.values(output.branches).reduce((acc, b) => acc + (b.qrScans || 0), 0);
+        output.totals = {
+            workFormation: totalWork,
+            uploadedDocs: totalUp,
+            createdIdAndUploaded: totalId,
+            qrScans: totalQr
+        };
+
+        // создать JSON и скачать
+        const jsonStr = JSON.stringify(output, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `statistics_max_${selectedDate}.json`; // имя с датой
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        // подтверждение
+        alert(`✅ Статистика по ВСЕМ филиалам сохранена в файл.\nДата отчёта: ${selectedDate}`);
+    }
+
+    saveBtn.addEventListener('click', saveAllToFile);
+
+    // Первоначальный рендер
+    renderTable();
+})();
+</script>
+</body>
+</html>

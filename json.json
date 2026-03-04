@@ -1,0 +1,18 @@
+{
+  "date": "2026-03-03",
+  "branches": {
+    "Головной офис": {
+      "workFormation": 45,
+      "uploadedDocs": 30,
+      "createdIdAndUploaded": 22,
+      "qrScans": 115
+    },
+    // ... другие филиалы
+  },
+  "totals": {
+    "workFormation": 548,
+    "uploadedDocs": 401,
+    "createdIdAndUploaded": 289,
+    "qrScans": 1203
+  }
+}
